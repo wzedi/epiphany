@@ -65,6 +65,33 @@ class EpiApi
   }
 
   /**
+   * load('/path/to/file');
+   * @name  load
+   * @author  Warrick Zedi <wzedi@cadreworks.com>
+   * @param string $file
+   */
+  public function load($file)
+  { 
+    $file = Epi::getPath('config') . "/{$file}";
+    if(!file_exists($file))
+    { 
+      EpiException::raise(new EpiException("Config file ({$file}) does not exist"));
+      break; // need to simulate same behavior if exceptions are turned off
+    }
+    
+    $parsed_array = parse_ini_file($file, true);
+    foreach($parsed_array as $route)
+    { 
+      $method = strtolower($route['method']);
+      $visibility = isset($route['visibility']) ? strtolower($route['visibility']) : self::internal;
+      if(isset($route['class']) && isset($route['function']))
+        $this->$method($route['path'], array($route['class'], $route['function']), $visibility);
+      elseif(isset($route['function']))
+        $this->$method($route['path'], $route['function'], $visibility);
+    }       
+  }
+
+  /**
    * EpiApi::getRoute($route); 
    * @name  getRoute
    * @author  Jaisen Mathai <jaisen@jmathai.com>
